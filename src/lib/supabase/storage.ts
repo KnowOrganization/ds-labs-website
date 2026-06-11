@@ -121,18 +121,3 @@ export async function uploadVideo(
   const url = bucket.getPublicUrl(path).data.publicUrl;
   return { url, path };
 }
-
-/**
- * Remove a video by storage path. Treats "not found" as success so callers
- * can delete idempotently (e.g. cleaning up after a failed record write).
- */
-export async function deleteVideo(path: string): Promise<void> {
-  if (!isSupabaseConfigured) return;
-
-  const supabase = createClient();
-  const { error } = await supabase.storage.from(VIDEO_BUCKET).remove([path]);
-
-  if (error && !/not.?found/i.test(error.message)) {
-    throw new Error(`Delete failed: ${error.message}`);
-  }
-}

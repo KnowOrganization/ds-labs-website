@@ -8,9 +8,7 @@ import { initBackground, type Background, type WorldState } from "./background";
 
 interface LaidCard {
   card: ResourceCard;
-  clusterColor: string;
   clusterLabel: string;
-  clusterKicker: string;
   x: number;
   y: number;
   w: number;
@@ -112,8 +110,7 @@ export function initStudio(opts: StudioOptions): StudioEngine {
       }
       world.appendChild(el);
       const lc: LaidCard = {
-        card: c, clusterColor: cl.color, clusterLabel: cl.label, clusterKicker: cl.kicker,
-        x: pos.x, y: pos.y, w: pos.w, el,
+        card: c, clusterLabel: cl.label, x: pos.x, y: pos.y, w: pos.w, el,
       };
       laid.push(lc);
       cardEls.set(c.id, lc);

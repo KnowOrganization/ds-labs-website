@@ -65,7 +65,3 @@ export const flags: Flags = build();
 export function isClusterEnabled(id: ClusterId): boolean {
   return flags.clusters[id] === true;
 }
-
-export function enabledClusterIds(): ClusterId[] {
-  return (Object.keys(flags.clusters) as ClusterId[]).filter(isClusterEnabled);
-}

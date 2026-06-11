@@ -12,11 +12,6 @@ export function isFileVideo(url?: string | null): boolean {
   return false;
 }
 
-/** True when the url should be embedded in an iframe (YouTube, Vimeo, etc.). */
-export function isEmbedVideo(url?: string | null): boolean {
-  return !!url && !isFileVideo(url);
-}
-
 /** Extract a YouTube video id from embed/watch/short urls, else null. */
 export function youtubeId(url?: string | null): string | null {
   if (!url) return null;
