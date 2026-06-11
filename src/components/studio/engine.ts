@@ -348,12 +348,8 @@ export function initStudio(opts: StudioOptions): StudioEngine {
 
   /* ---------------- wire HUD controls ---------------- */
   const homeBtn = $(".home-btn") as HTMLElement | null;
-  const zoomIn = $(".zoom-in") as HTMLElement | null;
-  const zoomOut = $(".zoom-out") as HTMLElement | null;
   const overview = $(".overview-btn") as HTMLElement | null;
   homeBtn?.addEventListener("click", goHome);
-  zoomIn?.addEventListener("click", () => zoomAt(innerWidth / 2, innerHeight / 2, 1.25));
-  zoomOut?.addEventListener("click", () => zoomAt(innerWidth / 2, innerHeight / 2, 0.8));
   overview?.addEventListener("click", () => centreOn(U.world.w / 2, U.world.h / 2, SMIN + 0.02, true));
   search?.addEventListener("input", onSearchInput);
 

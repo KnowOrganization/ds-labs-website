@@ -107,14 +107,6 @@ export default function Studio({ universe, features }: Props) {
 
       <div className="controls fade-in">
         <div className="stack">
-          <button className="zoom-in" aria-label="Zoom in">
-            +
-          </button>
-          <button className="zoom-out" aria-label="Zoom out">
-            −
-          </button>
-        </div>
-        <div className="stack">
           <button className="overview-btn" aria-label="Overview" title="See everything">
             ⊹
           </button>
