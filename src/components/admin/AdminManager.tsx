@@ -10,6 +10,7 @@ import {
   seedDefaults,
   type ResourceInput,
 } from "@/app/admin/actions";
+import VideoUploader from "./VideoUploader";
 
 const CLUSTERS = ["prompts", "videos", "products", "notion", "tools", "code", "vault"];
 const TYPES = ["prompt", "video", "product", "template", "tool", "code", "link"];
@@ -124,12 +125,23 @@ export default function AdminManager({ rows }: { rows: ResourceRow[] }) {
             <label>Link URL</label>
             <input value={form.url} onChange={(e) => set("url", e.target.value)} placeholder="https://…" />
           </div>
-          <div className="field">
-            <label>Video URL (embed)</label>
+          <div className="field span-2">
+            <label>Video</label>
+            <VideoUploader
+              value={form.videoUrl}
+              onUploaded={(url) => {
+                set("videoUrl", url);
+                set("type", "video");
+              }}
+            />
+            <small style={{ color: "var(--faint)", fontSize: 11.5, marginTop: 6 }}>
+              Upload a file, or paste an embed URL below.
+            </small>
             <input
               value={form.videoUrl}
               onChange={(e) => set("videoUrl", e.target.value)}
               placeholder="https://www.youtube.com/embed/…"
+              style={{ marginTop: 6 }}
             />
           </div>
           <div className="field">

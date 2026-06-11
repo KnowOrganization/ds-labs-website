@@ -86,6 +86,15 @@ export async function deleteResource(id: string): Promise<ActionResult> {
   try {
     await guard();
     const supabase = await createClient();
+    // best-effort: drop the uploaded video file from storage before the row goes
+    const { data: row } = await supabase
+      .from("resources")
+      .select("video_url")
+      .eq("id", id)
+      .maybeSingle();
+    const path = storagePathFromUrl(row?.video_url ?? null);
+    if (path) await supabase.storage.from("videos").remove([path]);
+
     const { error } = await supabase.from("resources").delete().eq("id", id);
     if (error) return { ok: false, error: error.message };
     revalidatePath("/admin");
@@ -94,6 +103,14 @@ export async function deleteResource(id: string): Promise<ActionResult> {
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
+}
+
+/** Extract the storage object path from a public `videos` bucket URL, else null. */
+function storagePathFromUrl(url: string | null): string | null {
+  if (!url) return null;
+  const marker = "/storage/v1/object/public/videos/";
+  const i = url.indexOf(marker);
+  return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
 }
 
 export async function toggleResource(id: string, enabled: boolean): Promise<ActionResult> {

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Cluster, ResourceCard, Universe } from "@/lib/types";
+import { isFileVideo } from "@/lib/video";
 import { initStudio, type StudioEngine } from "./engine";
 
 export interface StudioFeatures {
@@ -153,12 +154,23 @@ export default function Studio({ universe, features }: Props) {
 
             {selected.type === "video" && selected.videoUrl && (
               <div className="d-video">
-                <iframe
-                  src={selected.videoUrl}
-                  title={selected.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                {isFileVideo(selected.videoUrl) ? (
+                  <video
+                    className="d-video-el"
+                    src={selected.videoUrl}
+                    title={selected.title}
+                    controls
+                    playsInline
+                    preload="metadata"
+                  />
+                ) : (
+                  <iframe
+                    src={selected.videoUrl}
+                    title={selected.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                )}
               </div>
             )}
 

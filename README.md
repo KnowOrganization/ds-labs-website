@@ -34,15 +34,23 @@ the seed content from `src/lib/universe.ts`; auth and admin are disabled.
 
 ## Supabase setup
 
+**New here? Follow the full walkthrough in [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md)** —
+it covers keys, auth, the `videos` storage bucket for uploads, and troubleshooting.
+
+Quick version:
+
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run [`supabase/schema.sql`](./supabase/schema.sql) in the SQL editor.
+2. Run [`supabase/schema.sql`](./supabase/schema.sql) **then**
+   [`supabase/storage.sql`](./supabase/storage.sql) in the SQL editor
+   (the second sets up the public `videos` bucket for video uploads).
 3. Put the project URL + anon key in `.env.local`:
    ```
    NEXT_PUBLIC_SUPABASE_URL=...
    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
    ADMIN_EMAILS=you@example.com   # optional allow-list; empty = any signed-in user
    ```
-4. Sign up at `/signup`, then open `/admin` and hit **Seed prompts & videos**.
+4. Sign up at `/signup`, open `/admin`, hit **Seed prompts & videos**, then
+   upload a video on a resource.
 
 > For a smoother dev loop, disable "Confirm email" in Supabase Auth settings so
 > sign-up logs you straight in.
