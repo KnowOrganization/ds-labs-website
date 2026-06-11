@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import type { Cluster, ResourceCard, Universe } from "@/lib/types";
 import { initStudio, type StudioEngine } from "./engine";
 
@@ -9,16 +8,14 @@ export interface StudioFeatures {
   search: boolean;
   minimap: boolean;
   follow: boolean;
-  admin: boolean;
 }
 
 interface Props {
   universe: Universe;
   features: StudioFeatures;
-  isAuthed: boolean;
 }
 
-export default function Studio({ universe, features, isAuthed }: Props) {
+export default function Studio({ universe, features }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<StudioEngine | null>(null);
   const [selected, setSelected] = useState<ResourceCard | null>(null);
@@ -83,16 +80,6 @@ export default function Studio({ universe, features, isAuthed }: Props) {
               <span id="search-count" />
             </label>
           )}
-          {features.admin &&
-            (isAuthed ? (
-              <Link className="pill-btn ghost fade-in" href="/admin">
-                Admin
-              </Link>
-            ) : (
-              <Link className="pill-btn ghost fade-in" href="/login">
-                Sign in
-              </Link>
-            ))}
           {features.follow && (
             <a
               className="pill-btn fade-in"

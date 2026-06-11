@@ -63,7 +63,8 @@ export function initStudio(opts: StudioOptions): StudioEngine {
     });
   });
 
-  /* ---------------- build DOM ---------------- */
+  /* ---------------- build DOM (idempotent — StrictMode re-mounts) ---------------- */
+  world.innerHTML = "";
   U.clusters.forEach((cl) => {
     const lab = document.createElement("div");
     lab.className = "cluster-label";
@@ -106,9 +107,14 @@ export function initStudio(opts: StudioOptions): StudioEngine {
   brand.style.left = U.brand.x + "px";
   brand.style.top = U.brand.y + "px";
   brand.innerHTML = `
-    <span class="bn-kick">DS LABS</span>
-    <span class="bn-title">Resource<br>Studio</span>
-    <span class="bn-sub">A quiet galaxy of prompts &amp; videos from the feed. Drag to roam — tap a star to open it.</span>`;
+    <div class="bn-inner">
+      <span class="bn-kick">DS&nbsp;LABS</span>
+      <div class="bn-title">
+        <span class="mask"><span class="ln">Resource</span></span>
+        <span class="mask"><span class="ln">Studio</span></span>
+      </div>
+      <p class="bn-sub">A quiet galaxy of prompts &amp; videos from the feed.<br>Drag to roam — tap a star to open it.</p>
+    </div>`;
   world.appendChild(brand);
 
   /* ---------------- transform ---------------- */
@@ -210,6 +216,7 @@ export function initStudio(opts: StudioOptions): StudioEngine {
   const MW = 168, MH = MW * (U.world.h / U.world.w);
   if (mini) {
     mini.style.setProperty("--mh", MH + "px");
+    mini.querySelectorAll(".mini-dot").forEach((d) => d.remove());
     U.clusters.forEach((cl) => {
       const d = document.createElement("span");
       d.className = "mini-dot";
@@ -310,6 +317,7 @@ export function initStudio(opts: StudioOptions): StudioEngine {
   /* ---------------- warp chips ---------------- */
   const chips = $(".warp-bar .chips") as HTMLElement | null;
   if (chips) {
+    chips.querySelectorAll("[data-id]").forEach((b) => b.remove());
     U.clusters.forEach((cl) => {
       const b = document.createElement("button");
       b.dataset.id = cl.id;
@@ -362,6 +370,22 @@ export function initStudio(opts: StudioOptions): StudioEngine {
     }
   }
 
+  // brand hero entrance + idle float (award-y: masked line reveal)
+  const bnInner = brand.querySelector(".bn-inner") as HTMLElement | null;
+  const bnKick = brand.querySelector(".bn-kick");
+  const bnLines = brand.querySelectorAll(".bn-title .ln");
+  const bnSub = brand.querySelector(".bn-sub");
+  gsap.set([bnKick, bnSub], { y: 18, opacity: 0 });
+  gsap.set(bnLines, { yPercent: 115 });
+  const heroTl = gsap.timeline({ delay: 0.25 });
+  heroTl
+    .to(bnKick, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" })
+    .to(bnLines, { yPercent: 0, duration: 1.05, stagger: 0.12, ease: "power4.out" }, "-=0.35")
+    .to(bnSub, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, "-=0.55");
+  if (bnInner) {
+    gsap.to(bnInner, { y: -10, duration: 3.4, ease: "sine.inOut", yoyo: true, repeat: -1, delay: 1.2 });
+  }
+
   // HUD entrance + hint
   gsap.fromTo(root.querySelectorAll(".fade-in"),
     { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, stagger: 0.08, ease: "power2.out", delay: 0.4 });
@@ -377,6 +401,8 @@ export function initStudio(opts: StudioOptions): StudioEngine {
   /* ---------------- destroy ---------------- */
   function destroy() {
     gsap.killTweensOf(S);
+    if (bnInner) gsap.killTweensOf(bnInner);
+    heroTl.kill();
     if (inertiaRaf) cancelAnimationFrame(inertiaRaf);
     bg?.stop();
     window.removeEventListener("pointermove", onMove);
@@ -385,6 +411,10 @@ export function initStudio(opts: StudioOptions): StudioEngine {
     window.removeEventListener("resize", onResize);
     window.removeEventListener("pointerdown", killHint);
     window.removeEventListener("wheel", killHint);
+    // remove engine-created DOM so a StrictMode re-mount rebuilds cleanly
+    world.innerHTML = "";
+    chips?.querySelectorAll("[data-id]").forEach((b) => b.remove());
+    mini?.querySelectorAll(".mini-dot").forEach((d) => d.remove());
   }
 
   return { goHome, warpTo, centerOnCard, clearActive, destroy };

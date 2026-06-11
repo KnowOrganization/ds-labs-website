@@ -117,8 +117,8 @@ export function initBackground(
     uTime: { value: 0 },
     uAmp: { value: 0.2 },
     uLight: { value: new THREE.Vector3(0.4, 0.7, 1) },
-    uColA: { value: new THREE.Color(0xdfe5f2) },
-    uColB: { value: new THREE.Color(0x2c46e6) },
+    uColA: { value: new THREE.Color(0xe8edff) },
+    uColB: { value: new THREE.Color(0x3a2ce6) },
   };
   const orb = new THREE.Mesh(
     new THREE.IcosahedronGeometry(1, isMobile ? 24 : 40),
@@ -147,9 +147,11 @@ export function initBackground(
 
   let raf: number | null = null;
   let t = 0;
+  let intro = 0; // 0→1 entrance ease for the hero orb
   function frame() {
     if (W !== window.innerWidth || H !== window.innerHeight) resize();
     t += 0.016;
+    intro += (1 - intro) * 0.035;
     pointer.x += (pointer.tx - pointer.x) * 0.05;
     pointer.y += (pointer.ty - pointer.y) * 0.05;
 
@@ -160,11 +162,12 @@ export function initBackground(
       const cy = r.top + r.height / 2;
       orb.position.x = cx - W / 2;
       orb.position.y = H / 2 - cy;
-      orb.scale.setScalar(Math.max(40, r.width * 0.62));
+      const base = Math.max(140, r.width * 0.7);
+      orb.scale.setScalar(base * (0.45 + 0.55 * intro));
     }
     orb.rotation.y += 0.0012;
     uniforms.uTime.value = t;
-    uniforms.uAmp.value = 0.2 + Math.hypot(pointer.tx - pointer.x, pointer.ty - pointer.y) * 0.45;
+    uniforms.uAmp.value = 0.24 + Math.hypot(pointer.tx - pointer.x, pointer.ty - pointer.y) * 0.5;
     uniforms.uLight.value.set(pointer.x * 2, pointer.y * 2 + 0.5, 1.1);
 
     for (const lyr of layers) {

@@ -123,18 +123,37 @@ a { color: inherit; text-decoration: none; }
 .node.hit { border-color: var(--accent); }
 .node.is-open { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 26px 50px oklch(0.17 0.006 270 / 0.16); }
 
-/* ---------------- brand centre node ---------------- */
+/* ---------------- brand centre node (hero) ---------------- */
 .brand-node {
   position: absolute; transform: translate(-50%, -50%);
-  width: 440px; text-align: center; z-index: 2; pointer-events: none;
-  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  width: min(760px, 88vw); text-align: center; z-index: 2; pointer-events: none;
 }
-.brand-node .bn-kick {
-  font-family: var(--mono); font-size: 13px; letter-spacing: 0.4em; color: var(--ink);
-  padding-left: 0.4em;
+/* soft luminous halo sitting behind the wordmark (pairs with the 3D orb) */
+.brand-node::before {
+  content: ''; position: absolute; left: 50%; top: 48%;
+  transform: translate(-50%, -50%);
+  width: 116%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle,
+    oklch(0.6 0.18 274 / 0.20) 0%,
+    oklch(0.7 0.14 300 / 0.10) 38%,
+    transparent 64%);
+  filter: blur(26px); z-index: -1;
 }
-.brand-node .bn-title { font-size: 76px; font-weight: 700; letter-spacing: -0.04em; line-height: 0.9; color: var(--ink); }
-.brand-node .bn-sub { font-size: 15px; color: var(--muted); line-height: 1.5; max-width: 30ch; }
+.bn-inner { display: flex; flex-direction: column; align-items: center; gap: 18px; will-change: transform; }
+.bn-kick {
+  font-family: var(--mono); font-size: 13px; letter-spacing: 0.46em;
+  color: var(--muted); text-transform: uppercase; padding-left: 0.46em;
+}
+.bn-title { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.bn-title .mask { display: block; overflow: hidden; padding: 0 0.05em; }
+.bn-title .ln {
+  display: block;
+  font-size: clamp(64px, 9.2vw, 138px); font-weight: 800;
+  letter-spacing: -0.045em; line-height: 0.96;
+  background: linear-gradient(178deg, var(--ink) 0%, oklch(0.34 0.07 274) 78%, oklch(0.5 0.16 274) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.bn-sub { font-size: 16px; color: var(--muted); line-height: 1.55; max-width: 36ch; margin: 6px auto 0; }
 
 /* ===========================================================
    HUD
@@ -301,8 +320,9 @@ a { color: inherit; text-decoration: none; }
   .detail.open .detail-panel { transform: translateY(0); }
   .d-title { font-size: 30px; }
   .cluster-label .big { font-size: 64px; }
-  .brand-node { width: 320px; }
-  .brand-node .bn-title { font-size: 56px; }
+  .brand-node { width: 90vw; }
+  .bn-title .ln { font-size: clamp(46px, 15vw, 72px); }
+  .bn-kick { font-size: 11px; letter-spacing: 0.36em; }
   .explore-hint { transform: translate(-50%, 180px); font-size: 10px; }
 }
 
