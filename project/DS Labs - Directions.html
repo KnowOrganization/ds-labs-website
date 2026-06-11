@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DS Labs — Direction Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/directions.css" />
+</head>
+<body>
+
+<!-- ===================== GLOBAL SWITCHER ===================== -->
+<nav class="switcher">
+  <div class="brand"><span class="dot"></span>DS_LABS<span class="full">&nbsp;// direction explorer</span></div>
+  <div class="tabs">
+    <button data-target="terminal" class="active"><span class="num">01</span><span class="label">Terminal</span></button>
+    <button data-target="meme"><span class="num">02</span><span class="label">Meme Lab</span></button>
+    <button data-target="minimal"><span class="num">03</span><span class="label">Studio</span></button>
+  </div>
+</nav>
+<div class="mouse-hint">move your mouse — it reacts ✦</div>
+
+<!-- ===================== 01 · TERMINAL ===================== -->
+<section class="dir" data-dir="terminal" data-screen-label="Direction 01 — Terminal">
+  <header class="hero">
+    <canvas class="hero-canvas"></canvas>
+    <div class="hero-inner wrap">
+      <div class="term-line" data-stagger><span class="prompt">dslabs@web</span>:~$ <span class="type-target" data-text="open resources --all"></span><span class="cursor-inline"></span></div>
+      <h1 data-stagger>TECH,<br>BUT<br>FUNNY<span class="cursor"></span></h1>
+      <p class="sub" data-stagger>The tools, prompts &amp; templates from the feed — finally in one place. No more "comment for the link." It's right here.</p>
+      <div class="btn-row" data-stagger>
+        <a class="btn btn-primary" href="#">$ browse resources →</a>
+        <a class="btn btn-ghost" href="#">view the showcase</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="res">
+    <div class="wrap">
+      <div class="res-head">
+        <h2>// the_resource_index</h2>
+      </div>
+      <div class="res-grid" data-cards></div>
+    </div>
+  </section>
+
+  <div class="marquee"><div class="track"><span>PROMPTS ✦ TEMPLATES ✦ TOOLS ✦ SNIPPETS ✦ LINKS ✦</span><span>PROMPTS ✦ TEMPLATES ✦ TOOLS ✦ SNIPPETS ✦ LINKS ✦</span></div></div>
+
+  <footer class="dir-footer">
+    <div class="wrap">
+      <h2>stop scrolling.<br>start shipping.</h2>
+      <a class="btn btn-primary" href="#">$ follow @dslabs →</a>
+    </div>
+  </footer>
+</section>
+
+<!-- ===================== 02 · MEME LAB ===================== -->
+<section class="dir" data-dir="meme" data-screen-label="Direction 02 — Meme Lab">
+  <header class="hero">
+    <canvas class="hero-canvas"></canvas>
+    <div class="hero-inner wrap">
+      <span class="eyebrow" data-stagger>★ certified internet brain rot ★</span>
+      <h1 data-stagger><span class="a">DON'T</span> <span class="b">JUST</span><br><span class="c">SAVE.</span> BUILD.</h1>
+      <p class="sub" data-stagger>You liked the reel. You saved the post. Now actually use the thing — prompts, templates &amp; tools you've been hoarding, all in one chaotic-good library.</p>
+      <div class="btn-row" data-stagger>
+        <a class="btn btn-primary" href="#">grab the goods</a>
+        <a class="btn btn-ghost" href="#">see the showcase</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="res">
+    <div class="wrap">
+      <div class="res-head">
+        <h2>the loot drop 🎁</h2>
+      </div>
+      <div class="res-grid" data-cards></div>
+    </div>
+  </section>
+
+  <div class="marquee"><div class="track"><span>FREE STUFF ✦ NO PAYWALL ✦ JUST VIBES ✦ FREE STUFF ✦ NO PAYWALL ✦ JUST VIBES ✦</span><span>FREE STUFF ✦ NO PAYWALL ✦ JUST VIBES ✦ FREE STUFF ✦ NO PAYWALL ✦ JUST VIBES ✦</span></div></div>
+
+  <footer class="dir-footer">
+    <div class="wrap">
+      <h2>built different?<br>prove it. <em>build.</em></h2>
+      <a class="btn btn-primary" href="#">follow @dslabs →</a>
+    </div>
+  </footer>
+</section>
+
+<!-- ===================== 03 · STUDIO ===================== -->
+<section class="dir" data-dir="minimal" data-screen-label="Direction 03 — Studio">
+  <header class="hero">
+    <canvas class="hero-canvas"></canvas>
+    <div class="hero-inner wrap">
+      <span class="eyebrow" data-stagger><span class="dot"></span>&nbsp;DS LABS — A RESOURCE STUDIO</span>
+      <h1 data-stagger>Tools worth<br>keeping.</h1>
+      <p class="sub" data-stagger>A curated home for the prompts, templates and products we share. Considered, tested, and free to use.</p>
+      <div class="btn-row" data-stagger>
+        <a class="btn btn-primary" href="#">Explore resources</a>
+        <a class="btn btn-ghost" href="#">View showcase</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="res">
+    <div class="wrap">
+      <div class="res-head">
+        <h2>Everything in one place.</h2>
+        <p>From quick prompts to full product stacks — organised, searchable, always current.</p>
+      </div>
+      <div class="res-grid" data-cards></div>
+    </div>
+  </section>
+
+  <div class="marquee"><div class="track"><span>Prompts — Templates — Tools — Snippets — Links —</span><span>Prompts — Templates — Tools — Snippets — Links —</span></div></div>
+
+  <footer class="dir-footer">
+    <div class="wrap">
+      <h2>Make something good.</h2>
+      <a class="btn btn-primary" href="#">Follow @dslabs</a>
+    </div>
+  </footer>
+</section>
+
+<!-- ===================== LIBS ===================== -->
+<script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/three-scenes.js"></script>
+<script src="js/directions.js"></script>
+</body>
+</html>

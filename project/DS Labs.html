@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>DS Labs — Resource Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/labs.css" />
+</head>
+<body>
+
+<!-- ===================== SPATIAL STAGE ===================== -->
+<div id="viewport">
+  <canvas id="bg-canvas"></canvas>
+  <div id="world"></div>
+</div>
+
+<!-- ===================== HUD ===================== -->
+<header class="topbar">
+  <div class="brand-mark fade-in">
+    <span class="star"></span>DS&nbsp;LABS<span class="muted">&nbsp;/ resource studio</span>
+  </div>
+  <div class="top-right">
+    <label class="search-wrap fade-in">
+      <span class="ico">⌕</span>
+      <input id="search" type="text" placeholder="search the studio…" autocomplete="off" spellcheck="false" />
+      <span id="search-count"></span>
+    </label>
+    <a class="follow-btn fade-in" href="#" target="_blank" rel="noopener">Follow<span class="full">&nbsp;@dslabs</span></a>
+  </div>
+</header>
+
+<nav class="warp-bar fade-in">
+  <div class="chips">
+    <button class="home-btn"><span class="home-ico"></span>Home</button>
+    <span class="sep"></span>
+  </div>
+</nav>
+
+<div class="controls fade-in">
+  <div class="stack">
+    <button class="zoom-in" aria-label="Zoom in">+</button>
+    <button class="zoom-out" aria-label="Zoom out">−</button>
+  </div>
+  <div class="stack">
+    <button class="overview-btn" aria-label="Overview" title="See everything">⊹</button>
+  </div>
+</div>
+
+<div class="minimap fade-in">
+  <span class="mini-view"></span>
+</div>
+
+<div class="explore-hint">
+  <span class="k">drag</span> to roam · <span class="k">scroll</span> to zoom
+</div>
+
+<!-- ===================== DETAIL OVERLAY ===================== -->
+<div class="detail">
+  <div class="detail-scrim"></div>
+  <aside class="detail-panel">
+    <div class="d-top">
+      <span class="d-kick"></span>
+      <button class="d-close" aria-label="Close">✕</button>
+    </div>
+    <h2 class="d-title"></h2>
+    <p class="d-sub"></p>
+    <div class="d-row">
+      <span class="d-tag d-cluster"></span>
+      <span class="d-tag accent d-meta"></span>
+    </div>
+    <div class="d-comment">
+      <span class="lbl">How to unlock</span>
+      <div class="cmt">
+        <span class="bubble">💬 comment “<span class="d-word" style="color:var(--accent);font-weight:700;"></span>”</span>
+      </div>
+    </div>
+    <div class="d-actions">
+      <a class="d-primary" href="#" target="_blank" rel="noopener">Get the link ↗</a>
+      <button class="d-secondary">Watch the original reel ↗</button>
+    </div>
+  </aside>
+</div>
+
+<!-- ===================== LIBS + APP ===================== -->
+<script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="js/world-data.js"></script>
+<script src="js/labs-bg.js"></script>
+<script src="js/world.js"></script>
+</body>
+</html>
