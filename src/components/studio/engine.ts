@@ -3,6 +3,7 @@
 // design prototype (js/world.js) and made data-driven + framework-agnostic.
 import { gsap } from "gsap";
 import type { ResourceCard, Universe } from "@/lib/types";
+import { isFileVideo, videoPoster } from "@/lib/video";
 import { initBackground, type Background, type WorldState } from "./background";
 
 interface LaidCard {
@@ -49,7 +50,9 @@ export function initStudio(opts: StudioOptions): StudioEngine {
   U.clusters.forEach((cl) => {
     const n = cl.cards.length;
     const cols = n <= 4 ? 2 : 3;
-    const cellW = 286, cellH = 188, gx = 24, gy = 24;
+    // taller rows when a cluster shows video thumbnails so cards don't overlap
+    const hasMedia = cl.cards.some((c) => c.type === "video" && c.videoUrl);
+    const cellW = 286, cellH = hasMedia ? 326 : 188, gx = 24, gy = 24;
     const gw = cols * cellW + (cols - 1) * gx;
     const startX = cl.anchor.x - gw / 2;
     const startY = cl.anchor.y + 104;
@@ -84,7 +87,10 @@ export function initStudio(opts: StudioOptions): StudioEngine {
       el.style.width = pos.w + "px";
       el.style.setProperty("--accent", cl.color);
       const arrow = c.type === "video" ? "▷" : "↗";
+      const media = mediaHtml(c);
+      if (media) el.classList.add("has-media");
       el.innerHTML = `
+        ${media}
         <span class="node-meta"><span class="dot"></span>${esc(c.meta)}</span>
         <span class="node-title">${esc(c.title)}</span>
         <span class="node-sub">${esc(c.sub)}</span>
@@ -92,6 +98,18 @@ export function initStudio(opts: StudioOptions): StudioEngine {
       el.addEventListener("click", () => {
         if (!dragMoved) onOpenCard(c);
       });
+      // hover-preview for uploaded video files
+      const vid = el.querySelector("video");
+      if (vid) {
+        el.addEventListener("pointerenter", () => {
+          vid.loop = true;
+          void vid.play().catch(() => {});
+        });
+        el.addEventListener("pointerleave", () => {
+          vid.pause();
+          try { vid.currentTime = 0.1; } catch { /* not seekable yet */ }
+        });
+      }
       world.appendChild(el);
       const lc: LaidCard = {
         card: c, clusterColor: cl.color, clusterLabel: cl.label, clusterKicker: cl.kicker,
@@ -423,4 +441,20 @@ export function initStudio(opts: StudioOptions): StudioEngine {
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
+}
+
+/** Thumbnail markup for a video card: native <video> frame (uploads) or a
+ *  YouTube poster <img> (embeds). Empty string for non-video / no source. */
+function mediaHtml(c: ResourceCard): string {
+  if (c.type !== "video" || !c.videoUrl) return "";
+  const play = `<span class="node-play">▷</span>`;
+  if (isFileVideo(c.videoUrl)) {
+    // "#t=0.1" nudges the player to render the first frame as a poster
+    return `<span class="node-media"><video src="${esc(c.videoUrl)}#t=0.1" muted playsinline preload="metadata"></video>${play}</span>`;
+  }
+  const poster = videoPoster(c.videoUrl);
+  if (poster) {
+    return `<span class="node-media"><img src="${esc(poster)}" alt="" loading="lazy" />${play}</span>`;
+  }
+  return `<span class="node-media node-media-blank">${play}</span>`;
 }

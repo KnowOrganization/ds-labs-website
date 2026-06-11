@@ -123,6 +123,23 @@ a { color: inherit; text-decoration: none; }
 .node.hit { border-color: var(--accent); }
 .node.is-open { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 26px 50px oklch(0.17 0.006 270 / 0.16); }
 
+/* ---------------- video card thumbnail ---------------- */
+.node-media {
+  position: relative; display: block; width: 100%; aspect-ratio: 16 / 9;
+  border-radius: 12px; overflow: hidden; background: #0b0b10; margin-bottom: 2px;
+}
+.node-media video, .node-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.node-media-blank { display: grid; place-items: center; background: linear-gradient(135deg, oklch(0.3 0.05 274), oklch(0.22 0.04 290)); }
+.node-play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+  color: #fff; font-size: 15px; padding-left: 2px; pointer-events: none;
+  background: oklch(0.17 0.006 270 / 0.42); backdrop-filter: blur(6px);
+  border: 1px solid oklch(1 0 0 / 0.45);
+  transition: opacity 0.3s, transform 0.3s, background 0.3s;
+}
+.node.has-media:hover .node-play { opacity: 0; transform: translate(-50%, -50%) scale(1.1); }
+
 /* ---------------- brand centre node (hero) ---------------- */
 .brand-node {
   position: absolute; transform: translate(-50%, -50%);
