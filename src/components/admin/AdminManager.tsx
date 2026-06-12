@@ -3,29 +3,22 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ResourceRow } from "@/lib/types";
+import { inferKindFromUrl } from "@/lib/video";
 import {
   saveResource,
   deleteResource,
   toggleResource,
-  seedDefaults,
   type ResourceInput,
 } from "@/app/admin/actions";
-import VideoUploader from "./VideoUploader";
-
-const CLUSTERS = ["prompts", "videos", "products", "notion", "tools", "code", "vault"];
-const TYPES = ["prompt", "video", "product", "template", "tool", "code", "link"];
+import MediaUploader from "./MediaUploader";
 
 const EMPTY: ResourceInput = {
-  cluster: "prompts",
-  type: "prompt",
   title: "",
-  sub: "",
-  meta: "",
+  prompt: "",
   word: "",
-  url: "",
-  videoUrl: "",
+  mediaUrl: "",
+  mediaKind: "video",
   enabled: true,
-  sort: 0,
 };
 
 export default function AdminManager({ rows }: { rows: ResourceRow[] }) {
@@ -48,16 +41,12 @@ export default function AdminManager({ rows }: { rows: ResourceRow[] }) {
     setEditingId(row.id);
     setForm({
       id: row.id,
-      cluster: row.cluster,
-      type: row.type,
       title: row.title,
-      sub: row.sub,
-      meta: row.meta,
+      prompt: row.prompt,
       word: row.word,
-      url: row.url ?? "",
-      videoUrl: row.video_url ?? "",
+      mediaUrl: row.media_url ?? "",
+      mediaKind: row.media_kind,
       enabled: row.enabled,
-      sort: row.sort,
     });
     setMsg(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -82,78 +71,69 @@ export default function AdminManager({ rows }: { rows: ResourceRow[] }) {
     if (!editingId) reset();
   }
 
+  function onMediaUrlChange(url: string) {
+    set("mediaUrl", url);
+    const kind = inferKindFromUrl(url);
+    if (kind) set("mediaKind", kind);
+  }
+
   return (
     <>
       {msg && <div className={`notice ${msg.kind}`}>{msg.text}</div>}
 
       <form className="editor-card" onSubmit={onSubmit}>
-        <h2>{editingId ? "Edit resource" : "New resource"}</h2>
+        <h2>{editingId ? "Edit drop" : "New drop"}</h2>
         <div className="grid-2">
-          <div className="field">
-            <label>Cluster</label>
-            <select value={form.cluster} onChange={(e) => set("cluster", e.target.value)}>
-              {CLUSTERS.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label>Type</label>
-            <select value={form.type} onChange={(e) => set("type", e.target.value)}>
-              {TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
           <div className="field span-2">
             <label>Title</label>
             <input value={form.title} onChange={(e) => set("title", e.target.value)} required />
           </div>
           <div className="field span-2">
-            <label>Subtitle</label>
-            <input value={form.sub} onChange={(e) => set("sub", e.target.value)} />
+            <label>Prompt</label>
+            <textarea
+              value={form.prompt}
+              onChange={(e) => set("prompt", e.target.value)}
+              placeholder="Paste the full prompt that generated the media…"
+              rows={7}
+              required
+            />
+          </div>
+          <div className="field span-2">
+            <label>Media — the generated image or video</label>
+            <MediaUploader
+              value={form.mediaUrl}
+              onUploaded={({ url, kind }) => {
+                set("mediaUrl", url);
+                set("mediaKind", kind);
+              }}
+            />
+            <small style={{ color: "var(--faint)", fontSize: 11.5, marginTop: 6 }}>
+              Upload a file, or paste a direct file / YouTube embed URL below.
+              (Instagram links won&apos;t embed.)
+            </small>
+            <input
+              value={form.mediaUrl}
+              onChange={(e) => onMediaUrlChange(e.target.value)}
+              placeholder="https://www.youtube.com/embed/… or https://…/image.png"
+              style={{ marginTop: 6 }}
+            />
           </div>
           <div className="field">
-            <label>Meta (e.g. SALES · 9 prompts)</label>
-            <input value={form.meta} onChange={(e) => set("meta", e.target.value)} />
+            <label>Media kind</label>
+            <select
+              value={form.mediaKind}
+              onChange={(e) => set("mediaKind", e.target.value as ResourceInput["mediaKind"])}
+            >
+              <option value="image">Image → Prompts cluster</option>
+              <option value="video">Video → Videos cluster</option>
+            </select>
           </div>
           <div className="field">
             <label>Unlock word</label>
             <input value={form.word} onChange={(e) => set("word", e.target.value)} required />
           </div>
           <div className="field">
-            <label>Link URL</label>
-            <input value={form.url} onChange={(e) => set("url", e.target.value)} placeholder="https://…" />
-          </div>
-          <div className="field span-2">
-            <label>Video</label>
-            <VideoUploader
-              value={form.videoUrl}
-              onUploaded={(url) => {
-                set("videoUrl", url);
-                set("type", "video");
-              }}
-            />
-            <small style={{ color: "var(--faint)", fontSize: 11.5, marginTop: 6 }}>
-              Upload a file, or paste an embed URL below.
-            </small>
-            <input
-              value={form.videoUrl}
-              onChange={(e) => set("videoUrl", e.target.value)}
-              placeholder="https://www.youtube.com/embed/…"
-              style={{ marginTop: 6 }}
-            />
-          </div>
-          <div className="field">
-            <label>Sort</label>
-            <input
-              type="number"
-              value={form.sort}
-              onChange={(e) => set("sort", Number(e.target.value))}
-            />
-          </div>
-          <div className="field">
-            <label>Enabled</label>
+            <label>Status</label>
             <select
               value={form.enabled ? "1" : "0"}
               onChange={(e) => set("enabled", e.target.value === "1")}
@@ -165,7 +145,7 @@ export default function AdminManager({ rows }: { rows: ResourceRow[] }) {
         </div>
         <div className="editor-actions">
           <button className="btn-solid grow" type="submit" disabled={pending}>
-            {pending ? "…" : editingId ? "Save changes" : "Create resource"}
+            {pending ? "…" : editingId ? "Save changes" : "Create drop"}
           </button>
           {editingId && (
             <button type="button" className="btn-line" onClick={reset} disabled={pending}>
@@ -177,23 +157,13 @@ export default function AdminManager({ rows }: { rows: ResourceRow[] }) {
 
       <div className="table-wrap">
         {rows.length === 0 ? (
-          <div className="empty-state">
-            No resources yet.{" "}
-            <button
-              className="btn-line"
-              onClick={() => run(seedDefaults, "Seeded default prompts & videos.")}
-              disabled={pending}
-            >
-              Seed prompts &amp; videos
-            </button>
-          </div>
+          <div className="empty-state">No drops yet — create one above.</div>
         ) : (
           <table className="res-table">
             <thead>
               <tr>
                 <th>Title</th>
-                <th className="hide-sm">Cluster</th>
-                <th className="hide-sm">Type</th>
+                <th className="hide-sm">Media</th>
                 <th>Status</th>
                 <th />
               </tr>
@@ -205,8 +175,7 @@ export default function AdminManager({ rows }: { rows: ResourceRow[] }) {
                     <div className="t-title">{row.title}</div>
                     <div className="t-sub">💬 {row.word}</div>
                   </td>
-                  <td className="hide-sm"><span className="badge">{row.cluster}</span></td>
-                  <td className="hide-sm"><span className="badge">{row.type}</span></td>
+                  <td className="hide-sm"><span className="badge">{row.media_kind}</span></td>
                   <td>
                     <button
                       className={`badge ${row.enabled ? "on" : "off"}`}

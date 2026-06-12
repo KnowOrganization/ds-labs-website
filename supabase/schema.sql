@@ -1,23 +1,19 @@
--- DS Labs — resources schema. Run in the Supabase SQL editor.
+-- DS Labs — resources schema (canonical, fresh installs). Run in the Supabase
+-- SQL editor. Existing databases: run migrate-002-media.sql instead.
+--
+-- Each row is one "drop": a prompt + the content it generated (image or video).
 
 create table if not exists public.resources (
   id         uuid primary key default gen_random_uuid(),
-  cluster    text not null check (cluster in
-               ('prompts','videos','products','notion','tools','code','vault')),
-  type       text not null check (type in
-               ('prompt','video','product','template','tool','code','link')),
   title      text not null,
-  sub        text not null default '',
-  meta       text not null default '',
+  prompt     text not null default '',
   word       text not null,
-  url        text,
-  video_url  text,
+  media_url  text,
+  media_kind text not null default 'video' check (media_kind in ('image','video')),
   enabled    boolean not null default true,
-  sort       integer not null default 0,
   created_at timestamptz not null default now()
 );
 
-create index if not exists resources_cluster_idx on public.resources (cluster);
 create index if not exists resources_enabled_idx on public.resources (enabled);
 
 -- Row Level Security: world reads only live rows; signed-in users manage all.

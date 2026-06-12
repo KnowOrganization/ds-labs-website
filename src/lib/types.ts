@@ -9,29 +9,20 @@ export type ClusterId =
   | "code"
   | "vault";
 
-export type ResourceType =
-  | "prompt"
-  | "video"
-  | "product"
-  | "template"
-  | "tool"
-  | "code"
-  | "link";
+export type MediaKind = "image" | "video";
 
 export interface ResourceCard {
   id: string;
+  /** derived from mediaKind — image → prompts, video → videos */
   cluster: ClusterId;
-  type: ResourceType;
   title: string;
-  sub: string;
-  /** mono meta line, e.g. "SALES · 9 prompts" */
-  meta: string;
+  /** the showcased prompt that generated the media */
+  prompt: string;
   /** the "comment WORD to unlock" keyword */
   word: string;
-  /** primary outbound link (the unlock destination) */
-  url?: string;
-  /** video embed/source url — used when type === "video" */
-  videoUrl?: string;
+  /** generated content url — uploaded file or embed; "" when missing */
+  mediaUrl: string;
+  mediaKind: MediaKind;
 }
 
 export interface Cluster {
@@ -54,15 +45,11 @@ export interface Universe {
 /** Row shape of the Supabase `resources` table. */
 export interface ResourceRow {
   id: string;
-  cluster: ClusterId;
-  type: ResourceType;
   title: string;
-  sub: string;
-  meta: string;
+  prompt: string;
   word: string;
-  url: string | null;
-  video_url: string | null;
+  media_url: string | null;
+  media_kind: MediaKind;
   enabled: boolean;
-  sort: number;
   created_at: string;
 }

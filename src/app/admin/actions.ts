@@ -3,28 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminUser } from "@/lib/auth";
-import { CLUSTERS } from "@/lib/universe";
-import type { ClusterId, ResourceType } from "@/lib/types";
+import type { MediaKind } from "@/lib/types";
 
-const CLUSTER_IDS: ClusterId[] = [
-  "prompts", "videos", "products", "notion", "tools", "code", "vault",
-];
-const TYPES: ResourceType[] = [
-  "prompt", "video", "product", "template", "tool", "code", "link",
-];
+const MEDIA_KINDS: MediaKind[] = ["image", "video"];
 
 export interface ResourceInput {
   id?: string;
-  cluster: string;
-  type: string;
   title: string;
-  sub: string;
-  meta: string;
+  prompt: string;
   word: string;
-  url: string;
-  videoUrl: string;
+  mediaUrl: string;
+  mediaKind: MediaKind;
   enabled: boolean;
-  sort: number;
 }
 
 export interface ActionResult {
@@ -40,24 +30,21 @@ async function guard() {
 
 function validate(input: ResourceInput): string | null {
   if (!input.title.trim()) return "Title is required.";
+  if (!input.prompt.trim()) return "Prompt is required.";
   if (!input.word.trim()) return "Unlock word is required.";
-  if (!CLUSTER_IDS.includes(input.cluster as ClusterId)) return "Invalid cluster.";
-  if (!TYPES.includes(input.type as ResourceType)) return "Invalid type.";
+  if (!input.mediaUrl.trim()) return "Media is required — upload a file or paste a URL.";
+  if (!MEDIA_KINDS.includes(input.mediaKind)) return "Invalid media kind.";
   return null;
 }
 
 function toRow(input: ResourceInput) {
   return {
-    cluster: input.cluster,
-    type: input.type,
     title: input.title.trim(),
-    sub: input.sub.trim(),
-    meta: input.meta.trim(),
+    prompt: input.prompt.trim(),
     word: input.word.trim().toUpperCase(),
-    url: input.url.trim() || null,
-    video_url: input.videoUrl.trim() || null,
+    media_url: input.mediaUrl.trim() || null,
+    media_kind: input.mediaKind,
     enabled: input.enabled,
-    sort: Number.isFinite(input.sort) ? input.sort : 0,
   };
 }
 
@@ -86,13 +73,13 @@ export async function deleteResource(id: string): Promise<ActionResult> {
   try {
     await guard();
     const supabase = await createClient();
-    // best-effort: drop the uploaded video file from storage before the row goes
+    // best-effort: drop the uploaded media file from storage before the row goes
     const { data: row } = await supabase
       .from("resources")
-      .select("video_url")
+      .select("media_url")
       .eq("id", id)
       .maybeSingle();
-    const path = storagePathFromUrl(row?.video_url ?? null);
+    const path = storagePathFromUrl(row?.media_url ?? null);
     if (path) await supabase.storage.from("videos").remove([path]);
 
     const { error } = await supabase.from("resources").delete().eq("id", id);
@@ -118,41 +105,6 @@ export async function toggleResource(id: string, enabled: boolean): Promise<Acti
     await guard();
     const supabase = await createClient();
     const { error } = await supabase.from("resources").update({ enabled }).eq("id", id);
-    if (error) return { ok: false, error: error.message };
-    revalidatePath("/admin");
-    revalidatePath("/");
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: (e as Error).message };
-  }
-}
-
-/** One-click seed: insert the static prompts + videos cards if table is empty. */
-export async function seedDefaults(): Promise<ActionResult> {
-  try {
-    await guard();
-    const supabase = await createClient();
-    const { count } = await supabase
-      .from("resources")
-      .select("*", { count: "exact", head: true });
-    if ((count ?? 0) > 0) return { ok: false, error: "Table already has rows." };
-
-    const seed = CLUSTERS.filter((c) => c.id === "prompts" || c.id === "videos").flatMap(
-      (c) =>
-        c.cards.map((card, i) => ({
-          cluster: card.cluster,
-          type: card.type,
-          title: card.title,
-          sub: card.sub,
-          meta: card.meta,
-          word: card.word,
-          url: card.url ?? null,
-          video_url: card.videoUrl ?? null,
-          enabled: true,
-          sort: i,
-        })),
-    );
-    const { error } = await supabase.from("resources").insert(seed);
     if (error) return { ok: false, error: error.message };
     revalidatePath("/admin");
     revalidatePath("/");

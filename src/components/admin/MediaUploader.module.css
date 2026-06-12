@@ -1,4 +1,4 @@
-/* VideoUploader — admin in-panel video upload zone.
+/* MediaUploader — admin in-panel image/video upload zone.
    Uses global oklch tokens from globals.css (--ink, --muted, --line, etc.). */
 
 .wrap {

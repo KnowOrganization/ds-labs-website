@@ -1,15 +1,32 @@
-// Helpers to tell an uploaded video file from an embed (YouTube/Vimeo) URL.
-// Used by the studio detail panel and the admin uploader.
+// Helpers to classify media urls: uploaded files vs embeds (YouTube), and
+// image vs video. Used by the studio, the detail panel, and the admin form.
 
-const FILE_EXT = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i;
+import type { MediaKind } from "./types";
 
-/** True when the url points at a playable file (storage upload or direct .mp4). */
+const VIDEO_EXT = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i;
+const IMAGE_EXT = /\.(png|jpe?g|webp|gif|avif|svg)(\?.*)?$/i;
+
+/** True when the url points at a playable video file (storage upload or direct .mp4). */
 export function isFileVideo(url?: string | null): boolean {
   if (!url) return false;
-  if (FILE_EXT.test(url)) return true;
-  // Supabase Storage public object urls
-  if (url.includes("/storage/v1/object/public/")) return true;
+  if (VIDEO_EXT.test(url)) return true;
+  // Supabase Storage public object urls — only when not clearly an image.
+  if (url.includes("/storage/v1/object/public/") && !IMAGE_EXT.test(url)) return true;
   return false;
+}
+
+/** True when the url points at an image file. */
+export function isImageUrl(url?: string | null): boolean {
+  return !!url && IMAGE_EXT.test(url);
+}
+
+/** Best-effort media kind from a pasted url; null when ambiguous. */
+export function inferKindFromUrl(url?: string | null): MediaKind | null {
+  if (!url) return null;
+  if (IMAGE_EXT.test(url)) return "image";
+  if (VIDEO_EXT.test(url) || youtubeId(url)) return "video";
+  if (url.includes("/storage/v1/object/public/")) return "video";
+  return null;
 }
 
 /** Extract a YouTube video id from embed/watch/short urls, else null. */

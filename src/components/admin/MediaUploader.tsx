@@ -1,19 +1,20 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { isFileVideo } from "@/lib/video";
+import type { MediaKind } from "@/lib/types";
+import { isFileVideo, isImageUrl } from "@/lib/video";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { validateVideoFile, uploadVideo } from "@/lib/supabase/storage";
-import styles from "./VideoUploader.module.css";
+import { validateMediaFile, uploadMedia } from "@/lib/supabase/storage";
+import styles from "./MediaUploader.module.css";
 
 interface Props {
   value: string;
-  onUploaded: (url: string) => void;
+  onUploaded: (media: { url: string; kind: MediaKind }) => void;
 }
 
 type Status = "idle" | "uploading" | "done" | "error";
 
-export default function VideoUploader({ value, onUploaded }: Props) {
+export default function MediaUploader({ value, onUploaded }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [pct, setPct] = useState(0);
@@ -21,7 +22,8 @@ export default function VideoUploader({ value, onUploaded }: Props) {
   const [dragging, setDragging] = useState(false);
 
   const busy = status === "uploading";
-  const hasFilePreview = isFileVideo(value);
+  const hasVideoPreview = isFileVideo(value);
+  const hasImagePreview = isImageUrl(value);
 
   function openPicker() {
     if (busy) return;
@@ -31,7 +33,7 @@ export default function VideoUploader({ value, onUploaded }: Props) {
   async function handleFile(file: File) {
     setError(null);
 
-    const invalid = validateVideoFile(file);
+    const invalid = validateMediaFile(file);
     if (invalid) {
       setStatus("error");
       setError(invalid);
@@ -41,9 +43,9 @@ export default function VideoUploader({ value, onUploaded }: Props) {
     setStatus("uploading");
     setPct(0);
     try {
-      const { url } = await uploadVideo(file, setPct);
+      const { url, kind } = await uploadMedia(file, setPct);
       setStatus("done");
-      onUploaded(url);
+      onUploaded({ url, kind });
     } catch (e) {
       setStatus("error");
       setError(e instanceof Error ? e.message : "Upload failed.");
@@ -85,14 +87,19 @@ export default function VideoUploader({ value, onUploaded }: Props) {
   }
 
   // Already-uploaded file: inline preview + replace affordance.
-  if (hasFilePreview && status !== "uploading") {
+  if ((hasVideoPreview || hasImagePreview) && status !== "uploading") {
     return (
       <div className={styles.wrap}>
         <div className={styles.previewWrap}>
-          <video className={styles.preview} src={value} muted playsInline preload="metadata" />
+          {hasImagePreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className={styles.preview} src={value} alt="Uploaded media" />
+          ) : (
+            <video className={styles.preview} src={value} muted playsInline preload="metadata" />
+          )}
           <div className={styles.previewMeta}>
             <span className={styles.previewLabel}>
-              {status === "done" ? "✓ Uploaded" : "Uploaded video"}
+              {status === "done" ? "✓ Uploaded" : hasImagePreview ? "Uploaded image" : "Uploaded video"}
             </span>
             <button type="button" className={styles.replace} onClick={openPicker}>
               Replace
@@ -103,7 +110,7 @@ export default function VideoUploader({ value, onUploaded }: Props) {
         <input
           ref={inputRef}
           type="file"
-          accept="video/*"
+          accept="image/*,video/*"
           className={styles.input}
           onChange={onInputChange}
         />
@@ -146,8 +153,8 @@ export default function VideoUploader({ value, onUploaded }: Props) {
         ) : (
           <>
             <span className={styles.icon}>🎬</span>
-            <span className={styles.primary}>Drop a video or click to upload</span>
-            <span className={styles.hint}>MP4, WebM, MOV · up to 100MB</span>
+            <span className={styles.primary}>Drop an image or video, or click to upload</span>
+            <span className={styles.hint}>PNG, JPG, WebP · MP4, WebM, MOV · up to 100MB</span>
           </>
         )}
       </div>
@@ -157,7 +164,7 @@ export default function VideoUploader({ value, onUploaded }: Props) {
       <input
         ref={inputRef}
         type="file"
-        accept="video/*"
+        accept="image/*,video/*"
         className={styles.input}
         onChange={onInputChange}
       />

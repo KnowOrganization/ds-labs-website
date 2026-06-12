@@ -4,6 +4,7 @@
 import { gsap } from "gsap";
 import type { ResourceCard, Universe } from "@/lib/types";
 import { isFileVideo, videoPoster } from "@/lib/video";
+import { copyText } from "@/lib/clipboard";
 import { initBackground, type Background, type WorldState } from "./background";
 
 interface LaidCard {
@@ -12,7 +13,7 @@ interface LaidCard {
   x: number;
   y: number;
   w: number;
-  el: HTMLButtonElement;
+  el: HTMLElement;
 }
 
 export interface StudioEngine {
@@ -48,9 +49,8 @@ export function initStudio(opts: StudioOptions): StudioEngine {
   U.clusters.forEach((cl) => {
     const n = cl.cards.length;
     const cols = n <= 4 ? 2 : 3;
-    // taller rows when a cluster shows video thumbnails so cards don't overlap
-    const hasMedia = cl.cards.some((c) => c.type === "video" && c.videoUrl);
-    const cellW = 286, cellH = hasMedia ? 326 : 188, gx = 24, gy = 24;
+    // every card is media-first (thumb + title + prompt teaser) — fixed cell
+    const cellW = 286, cellH = 372, gx = 24, gy = 24;
     const gw = cols * cellW + (cols - 1) * gx;
     const startX = cl.anchor.x - gw / 2;
     const startY = cl.anchor.y + 104;
@@ -72,30 +72,54 @@ export function initStudio(opts: StudioOptions): StudioEngine {
     lab.style.left = cl.anchor.x + "px";
     lab.style.top = cl.anchor.y + "px";
     lab.style.setProperty("--accent", cl.color);
+    lab.classList.toggle("is-empty", cl.cards.length === 0);
     lab.innerHTML = `<span class="kick">${esc(cl.kicker)}</span><span class="big">${esc(cl.label)}</span><span class="blurb">${esc(cl.blurb)}</span>`;
     world.appendChild(lab);
   });
   U.clusters.forEach((cl) => {
     cl.cards.forEach((c) => {
       const pos = layout.get(c.id)!;
-      const el = document.createElement("button");
-      el.className = "node";
+      const el = document.createElement("div");
+      el.className = "node has-media";
+      el.setAttribute("role", "button");
+      el.tabIndex = 0;
       el.style.left = pos.x + "px";
       el.style.top = pos.y + "px";
       el.style.width = pos.w + "px";
       el.style.setProperty("--accent", cl.color);
-      const arrow = c.type === "video" ? "▷" : "↗";
-      const media = mediaHtml(c);
-      if (media) el.classList.add("has-media");
+      const kind = c.mediaKind === "video" ? "VIDEO" : "IMAGE";
       el.innerHTML = `
-        ${media}
-        <span class="node-meta"><span class="dot"></span>${esc(c.meta)}</span>
+        ${mediaHtml(c)}
+        <span class="node-meta"><span class="dot"></span>${kind} · PROMPT</span>
         <span class="node-title">${esc(c.title)}</span>
-        <span class="node-sub">${esc(c.sub)}</span>
-        <span class="node-foot"><span class="word">💬 “${esc(c.word)}”</span><span class="arrow">${arrow}</span></span>`;
+        <span class="node-prompt">${esc(c.prompt)}</span>
+        <span class="node-foot"><span class="word">💬 “${esc(c.word)}”</span><button type="button" class="node-copy" aria-label="Copy prompt" title="Copy prompt">⧉</button></span>`;
       el.addEventListener("click", () => {
         if (!dragMoved) onOpenCard(c);
       });
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpenCard(c);
+        }
+      });
+      const copyBtn = el.querySelector(".node-copy") as HTMLButtonElement | null;
+      if (copyBtn) {
+        let copyTimer: ReturnType<typeof setTimeout> | null = null;
+        copyBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          void copyText(c.prompt).then((ok) => {
+            if (!ok) return;
+            copyBtn.classList.add("copied");
+            copyBtn.textContent = "✓";
+            if (copyTimer) clearTimeout(copyTimer);
+            copyTimer = setTimeout(() => {
+              copyBtn.classList.remove("copied");
+              copyBtn.textContent = "⧉";
+            }, 1500);
+          });
+        });
+      }
       // hover-preview for uploaded video files
       const vid = el.querySelector("video");
       if (vid) {
@@ -300,7 +324,7 @@ export function initStudio(opts: StudioOptions): StudioEngine {
     }
     let first: LaidCard | null = null, n = 0;
     laid.forEach((c) => {
-      const hay = `${c.card.title} ${c.card.sub} ${c.card.meta} ${c.card.word} ${c.clusterLabel}`.toLowerCase();
+      const hay = `${c.card.title} ${c.card.prompt} ${c.card.word} ${c.clusterLabel}`.toLowerCase();
       const hit = hay.includes(q);
       c.el.classList.toggle("dim", !hit);
       c.el.classList.toggle("hit", hit);
@@ -436,16 +460,21 @@ function esc(s: string): string {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
 }
 
-/** Thumbnail markup for a video card: native <video> frame (uploads) or a
- *  YouTube poster <img> (embeds). Empty string for non-video / no source. */
+/** Thumbnail markup for a card: generated image, native <video> frame
+ *  (uploads, hover-plays), or a YouTube poster <img> (embeds). */
 function mediaHtml(c: ResourceCard): string {
-  if (c.type !== "video" || !c.videoUrl) return "";
   const play = `<span class="node-play">▷</span>`;
-  if (isFileVideo(c.videoUrl)) {
-    // "#t=0.1" nudges the player to render the first frame as a poster
-    return `<span class="node-media"><video src="${esc(c.videoUrl)}#t=0.1" muted playsinline preload="metadata"></video>${play}</span>`;
+  if (!c.mediaUrl) {
+    return `<span class="node-media node-media-blank">✦</span>`;
   }
-  const poster = videoPoster(c.videoUrl);
+  if (c.mediaKind === "image") {
+    return `<span class="node-media"><img src="${esc(c.mediaUrl)}" alt="" loading="lazy" /></span>`;
+  }
+  if (isFileVideo(c.mediaUrl)) {
+    // "#t=0.1" nudges the player to render the first frame as a poster
+    return `<span class="node-media"><video src="${esc(c.mediaUrl)}#t=0.1" muted playsinline preload="metadata"></video>${play}</span>`;
+  }
+  const poster = videoPoster(c.mediaUrl);
   if (poster) {
     return `<span class="node-media"><img src="${esc(poster)}" alt="" loading="lazy" />${play}</span>`;
   }

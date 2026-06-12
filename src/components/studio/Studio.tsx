@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Cluster, ResourceCard, Universe } from "@/lib/types";
 import { isFileVideo } from "@/lib/video";
+import { copyText } from "@/lib/clipboard";
 import { initStudio, type StudioEngine } from "./engine";
 
 export interface StudioFeatures {
@@ -20,6 +21,8 @@ export default function Studio({ universe, features }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<StudioEngine | null>(null);
   const [selected, setSelected] = useState<ResourceCard | null>(null);
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clusterById = useMemo(() => {
     const m = new Map<string, Cluster>();
@@ -46,9 +49,26 @@ export default function Studio({ universe, features }: Props) {
     };
   }, [universe]);
 
+  useEffect(() => {
+    setCopied(false);
+    return () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    };
+  }, [selected]);
+
   function closeDetail() {
     setSelected(null);
     engineRef.current?.clearActive();
+  }
+
+  function onCopyPrompt() {
+    if (!selected) return;
+    void copyText(selected.prompt).then((ok) => {
+      if (!ok) return;
+      setCopied(true);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 1500);
+    });
   }
 
   const cluster = selected ? clusterById.get(selected.cluster) : null;
@@ -138,18 +158,20 @@ export default function Studio({ universe, features }: Props) {
               </button>
             </div>
             <h2 className="d-title">{selected.title}</h2>
-            <p className="d-sub">{selected.sub}</p>
-            <div className="d-row">
-              <span className="d-tag">{cluster.label}</span>
-              <span className="d-tag accent">{selected.meta}</span>
-            </div>
 
-            {selected.type === "video" && selected.videoUrl && (
-              <div className="d-video">
-                {isFileVideo(selected.videoUrl) ? (
+            {selected.mediaUrl && (
+              <div className={selected.mediaKind === "image" ? "d-media" : "d-video"}>
+                {selected.mediaKind === "image" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    className="d-media-img"
+                    src={selected.mediaUrl}
+                    alt={selected.title}
+                  />
+                ) : isFileVideo(selected.mediaUrl) ? (
                   <video
                     className="d-video-el"
-                    src={selected.videoUrl}
+                    src={selected.mediaUrl}
                     title={selected.title}
                     controls
                     playsInline
@@ -157,7 +179,7 @@ export default function Studio({ universe, features }: Props) {
                   />
                 ) : (
                   <iframe
-                    src={selected.videoUrl}
+                    src={selected.mediaUrl}
                     title={selected.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -166,6 +188,14 @@ export default function Studio({ universe, features }: Props) {
               </div>
             )}
 
+            <div className="d-prompt">
+              <span className="lbl">The prompt</span>
+              <pre className="d-prompt-text">{selected.prompt}</pre>
+              <button className="d-copy" type="button" onClick={onCopyPrompt}>
+                {copied ? "✓ Copied" : "Copy prompt"}
+              </button>
+            </div>
+
             <div className="d-comment">
               <span className="lbl">How to unlock</span>
               <div className="cmt">
@@ -173,27 +203,6 @@ export default function Studio({ universe, features }: Props) {
                   💬 comment “<span className="d-word">{selected.word}</span>”
                 </span>
               </div>
-            </div>
-
-            <div className="d-actions">
-              <a
-                className="d-primary"
-                href={selected.url || selected.videoUrl || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {selected.type === "video" ? "Open the video ↗" : "Get the link ↗"}
-              </a>
-              {selected.type !== "video" && (
-                <a
-                  className="d-secondary"
-                  href="https://instagram.com/dslabs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Watch the original reel ↗
-                </a>
-              )}
             </div>
           </aside>
         )}
